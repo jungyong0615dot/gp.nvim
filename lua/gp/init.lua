@@ -1172,9 +1172,10 @@ M.create_handler = function(buf, win, line, first_undojoin, prefix, cursor)
 		)
 
 		local new_finished_lines = math.max(0, #lines - 1)
-		for i = finished_lines, new_finished_lines do
-			vim.api.nvim_buf_add_highlight(buf, qt.ns_id, hl_handler_group, first_line + i, 0, -1)
-		end
+    -- @Jungyong: removed highlight
+		-- for i = finished_lines, new_finished_lines do
+		-- 	vim.api.nvim_buf_add_highlight(buf, qt.ns_id, hl_handler_group, first_line + i, 0, -1)
+		-- end
 		finished_lines = new_finished_lines
 
 		local end_line = first_line + #vim.split(response, "\n")

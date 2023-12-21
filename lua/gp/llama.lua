@@ -10,6 +10,7 @@ local config = {
 	openai_api_key = "no-key",
 	-- api endpoint (you can change this to azure endpoint)
 	openai_api_endpoint = "http://localhost:8080/v1/chat/completions",
+	-- openai_api_endpoint = "http://localhost:8080/completion",
 	-- openai_api_endpoint = "https://$URL.openai.azure.com/openai/deployments/{{model}}/chat/completions?api-version=2023-03-15-preview",
 	-- prefix for all commands
 	cmd_prefix = "Lp",
@@ -20,7 +21,7 @@ local config = {
 	-- directory for storing chat files
 	chat_dir = vim.fn.stdpath("data"):gsub("/$", "") .. "/gp/chats",
 	-- chat model (string with model name or table with model name and parameters)
-	chat_model = { model = "gpt-4", temperature = 1.1, top_p = 1 },
+	chat_model = { model = "gpt-3.5-turbo", temperature = 1.1, top_p = 1 },
 	-- chat model system prompt (use this to specify the persona/role of the AI)
 	chat_system_prompt = "You are a general AI assistant.",
 	-- chat custom instructions (not visible in the chat but prepended to model prompt)
@@ -83,7 +84,7 @@ local config = {
 	-- command prompt prefix for asking user for input
 	command_prompt_prefix = "🤖 ~ ",
 	-- command model (string with model name or table with model name and parameters)
-	command_model = { model = "gpt-4", temperature = 1.1, top_p = 1 },
+	command_model = { model = "gpt-3.5-turbo", temperature = 1.1, top_p = 1 },
 	-- command system prompt
 	command_system_prompt = "You are an AI working as a code editor.\n\n"
 		.. "Please AVOID COMMENTARY OUTSIDE OF THE SNIPPET RESPONSE.\n"
@@ -978,6 +979,7 @@ M.query = function(buf, payload, handler, on_exit)
 		return
 	end
 
+
 	local qid = M._H.uuid()
 	M._queries[qid] = {
 		timestamp = os.time(),
@@ -1079,8 +1081,8 @@ M.query = function(buf, payload, handler, on_exit)
 		-- api-key is for azure, authorization is for openai
 		"-H",
 		"Authorization: Bearer " .. M.config.openai_api_key,
-		"-H",
-		"api-key: " .. M.config.openai_api_key,
+		-- "-H",
+		-- "api-key: " .. M.config.openai_api_key,
 		"-d",
 		vim.json.encode(payload),
 		--[[ "--doesnt_exist" ]]
@@ -1728,6 +1730,9 @@ M.chat_respond = function(params)
 		end
 	end
 	-- insert last message not handled in loop
+  vim.print(messages)
+  vim.print(role)
+  vim.print(content)
 	table.insert(messages, { role = role, content = content })
 
 	-- replace first empty message with system prompt
@@ -1771,6 +1776,7 @@ M.chat_respond = function(params)
 	end
 
 	-- call the model and write response
+  vim.print(M.prepare_payload(headers.model, M.config.chat_model, messages))
 	M.query(
 		buf,
 		M.prepare_payload(headers.model, M.config.chat_model, messages),
@@ -1818,6 +1824,7 @@ M.chat_respond = function(params)
 				local topic_handler = M.create_handler(topic_buf, nil, 0, false, "", false)
 
 				-- call the model
+        vim.print(M.prepare_payload(nil, M.config.chat_topic_gen_model, messages))
 				M.query(
 					nil,
 					M.prepare_payload(nil, M.config.chat_topic_gen_model, messages),
@@ -2404,6 +2411,7 @@ M.Prompt = function(params, target, prompt, model, template, system_template, wh
 		end
 
 		-- call the model and write the response
+    vim.print(M.prepare_payload(model, M.config.command_model, messages))
 		M.query(
 			buf,
 			M.prepare_payload(model, M.config.command_model, messages),
